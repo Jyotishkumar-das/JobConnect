@@ -5,6 +5,8 @@ import { GoogleLogin } from "@react-oauth/google";
 import { loginUser } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL = "https://jobconnect-7wqo.onrender.com/api";
+
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -28,12 +30,13 @@ const Login = () => {
         try {
             const data = await loginUser(
                 email,
-                password
+                password,
+                role
             );
 
             login(data);
 
-            // Redirect based on role
+            // Redirect based on actual user role
             if (data.user.role === "recruiter") {
                 navigate("/dashboard");
             } else {
@@ -56,7 +59,7 @@ const Login = () => {
             setLoading(true);
 
             const response = await fetch(
-                "http://127.0.0.1:5000/api/auth/google",
+                `${API_URL}/auth/google`,
                 {
                     method: "POST",
 
@@ -76,14 +79,13 @@ const Login = () => {
 
             if (!response.ok) {
                 throw new Error(
-                    data.message ||
-                    "Google login failed"
+                    data.message || "Google login failed"
                 );
             }
 
             login(data);
 
-            // Redirect based on role
+            // Redirect based on actual user role
             if (data.user.role === "recruiter") {
                 navigate("/dashboard");
             } else {
@@ -129,6 +131,8 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit}>
 
+                    {/* EMAIL */}
+
                     <div className="form-group">
 
                         <label htmlFor="email">
@@ -148,6 +152,8 @@ const Login = () => {
 
                     </div>
 
+                    {/* PASSWORD */}
+
                     <div className="form-group">
 
                         <label htmlFor="password">
@@ -166,6 +172,34 @@ const Login = () => {
                         />
 
                     </div>
+
+                    {/* ROLE */}
+
+                    <div className="form-group">
+
+                        <label htmlFor="role">
+                            Login As
+                        </label>
+
+                        <select
+                            id="role"
+                            value={role}
+                            onChange={(e) =>
+                                setRole(e.target.value)
+                            }
+                        >
+                            <option value="candidate">
+                                Candidate
+                            </option>
+
+                            <option value="recruiter">
+                                Recruiter
+                            </option>
+                        </select>
+
+                    </div>
+
+                    {/* LOGIN BUTTON */}
 
                     <button
                         className="primary-btn"
@@ -189,29 +223,9 @@ const Login = () => {
 
                 <h3>Login with Google</h3>
 
-                <div className="form-group">
-
-                    <label htmlFor="role">
-                        Select Role
-                    </label>
-
-                    <select
-                        id="role"
-                        value={role}
-                        onChange={(e) =>
-                            setRole(e.target.value)
-                        }
-                    >
-                        <option value="candidate">
-                            Candidate
-                        </option>
-
-                        <option value="recruiter">
-                            Recruiter
-                        </option>
-                    </select>
-
-                </div>
+                <p className="auth-subtitle">
+                    Select your role before using Google Login
+                </p>
 
                 <div className="google-login">
 

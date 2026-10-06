@@ -4,7 +4,7 @@ const API_URL = "https://jobconnect-7wqo.onrender.com/api";
 // LOGIN USER
 // ==========================================
 
-export const loginUser = async (email, password) => {
+export const loginUser = async (email, password, role) => {
     const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
@@ -13,6 +13,7 @@ export const loginUser = async (email, password) => {
         body: JSON.stringify({
             email,
             password,
+            role,
         }),
     });
 
@@ -51,9 +52,7 @@ export const registerUser = async (
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(
-            data.message || "Registration failed"
-        );
+        throw new Error(data.message || "Registration failed");
     }
 
     return data;
@@ -69,9 +68,7 @@ export const getAllJobs = async () => {
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(
-            data.message || "Failed to get jobs"
-        );
+        throw new Error(data.message || "Failed to get jobs");
     }
 
     return data;
@@ -82,16 +79,12 @@ export const getAllJobs = async () => {
 // ==========================================
 
 export const getJobById = async (id) => {
-    const response = await fetch(
-        `${API_URL}/jobs/${id}`
-    );
+    const response = await fetch(`${API_URL}/jobs/${id}`);
 
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(
-            data.message || "Failed to get job"
-        );
+        throw new Error(data.message || "Failed to get job");
     }
 
     return data;
@@ -107,7 +100,6 @@ export const applyForJob = async (
     coverLetter,
     token
 ) => {
-    // Create FormData for file upload
     const formData = new FormData();
 
     formData.append("jobId", jobId);
@@ -120,8 +112,6 @@ export const applyForJob = async (
             method: "POST",
 
             headers: {
-                // DO NOT add Content-Type here
-                // Browser automatically sets multipart/form-data
                 Authorization: `Bearer ${token}`,
             },
 
@@ -133,8 +123,7 @@ export const applyForJob = async (
 
     if (!response.ok) {
         throw new Error(
-            data.message ||
-            "Failed to apply for job"
+            data.message || "Failed to apply for job"
         );
     }
 
@@ -160,8 +149,7 @@ export const getMyApplications = async (token) => {
 
     if (!response.ok) {
         throw new Error(
-            data.message ||
-            "Failed to get applications"
+            data.message || "Failed to get applications"
         );
     }
 
@@ -190,8 +178,7 @@ export const getApplicationsForJob = async (
 
     if (!response.ok) {
         throw new Error(
-            data.message ||
-            "Failed to get applications"
+            data.message || "Failed to get applications"
         );
     }
 
@@ -227,8 +214,7 @@ export const updateApplicationStatus = async (
 
     if (!response.ok) {
         throw new Error(
-            data.message ||
-            "Failed to update application status"
+            data.message || "Failed to update application status"
         );
     }
 
@@ -239,10 +225,7 @@ export const updateApplicationStatus = async (
 // CREATE JOB
 // ==========================================
 
-export const createJob = async (
-    jobData,
-    token
-) => {
+export const createJob = async (jobData, token) => {
     const response = await fetch(
         `${API_URL}/jobs`,
         {
@@ -261,8 +244,7 @@ export const createJob = async (
 
     if (!response.ok) {
         throw new Error(
-            data.message ||
-            "Failed to create job"
+            data.message || "Failed to create job"
         );
     }
 
@@ -296,8 +278,7 @@ export const updateJob = async (
 
     if (!response.ok) {
         throw new Error(
-            data.message ||
-            "Failed to update job"
+            data.message || "Failed to update job"
         );
     }
 
@@ -327,8 +308,7 @@ export const deleteJob = async (
 
     if (!response.ok) {
         throw new Error(
-            data.message ||
-            "Failed to delete job"
+            data.message || "Failed to delete job"
         );
     }
 
@@ -363,8 +343,7 @@ export const updateProfile = async (
 
     if (!response.ok) {
         throw new Error(
-            data.message ||
-            "Failed to update profile"
+            data.message || "Failed to update profile"
         );
     }
 

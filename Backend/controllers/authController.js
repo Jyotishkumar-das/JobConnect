@@ -19,19 +19,30 @@ const registerUser = async (req, res) => {
             });
         }
 
-        const existingUser = await User.findOne({ email });
+        // Only allow valid roles
+        if (role && !["candidate", "recruiter"].includes(role)) {
+            return res.status(400).json({
+                message: "Invalid role",
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        const existingUser = await User.findOne({
+            email: normalizedEmail,
+        });
 
         if (existingUser) {
             return res.status(400).json({
-                message: "User already exists",
+                message: `This email is already registered as ${existingUser.role}. Please use a different email.`,
             });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const user = await User.create({
-            name,
-            email,
+            name: name.trim(),
+            email: normalizedEmail,
             password: hashedPassword,
             role: role || "candidate",
         });
@@ -46,6 +57,8 @@ const registerUser = async (req, res) => {
             },
         });
     } catch (error) {
+        console.error("Registration Error:", error.message);
+
         res.status(500).json({
             message: "Registration failed",
             error: error.message,
@@ -57,15 +70,26 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, role } = req.body;
 
-        if (!email || !password) {
+        if (!email || !password || !role) {
             return res.status(400).json({
-                message: "Please provide email and password",
+                message: "Email, password and role are required",
             });
         }
 
-        const user = await User.findOne({ email });
+        // Only candidate and recruiter can login
+        if (!["candidate", "recruiter"].includes(role)) {
+            return res.status(400).json({
+                message: "Invalid role",
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        const user = await User.findOne({
+            email: normalizedEmail,
+        });
 
         if (!user) {
             return res.status(401).json({
@@ -81,6 +105,14 @@ const loginUser = async (req, res) => {
         if (!isPasswordCorrect) {
             return res.status(401).json({
                 message: "Invalid email or password",
+            });
+        }
+
+        // IMPORTANT:
+        // Check selected login role with database role
+        if (user.role !== role) {
+            return res.status(403).json({
+                message: `This account is registered as ${user.role}. Please select ${user.role} login.`,
             });
         }
 
@@ -106,6 +138,8 @@ const loginUser = async (req, res) => {
             },
         });
     } catch (error) {
+        console.error("Login Error:", error.message);
+
         res.status(500).json({
             message: "Login failed",
             error: error.message,
@@ -147,22 +181,33 @@ const googleLogin = async (req, res) => {
             });
         }
 
+        const normalizedEmail = googleEmail.toLowerCase().trim();
+
         let user = await User.findOne({
-            email: googleEmail,
+            email: normalizedEmail,
         });
 
+        // Create new Google user
         if (!user) {
             const googlePassword = await bcrypt.hash(
-                `${googleEmail}${process.env.JWT_SECRET}`,
+                `${normalizedEmail}${process.env.JWT_SECRET}`,
                 10
             );
 
             user = await User.create({
                 name: googleName || "Google User",
-                email: googleEmail,
+                email: normalizedEmail,
                 password: googlePassword,
                 role: role,
             });
+        } else {
+            // IMPORTANT:
+            // Existing Google account must use the same role
+            if (user.role !== role) {
+                return res.status(403).json({
+                    message: `This Google account is registered as ${user.role}. Please select ${user.role} login.`,
+                });
+            }
         }
 
         const token = jwt.sign(
@@ -229,6 +274,8 @@ const updateProfile = async (req, res) => {
             },
         });
     } catch (error) {
+        console.error("Profile Update Error:", error.message);
+
         res.status(500).json({
             message: "Profile update failed",
             error: error.message,
