@@ -16,7 +16,7 @@ const Login = () => {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const { login } = useAuth();
+    const { login, logout } = useAuth();
     const navigate = useNavigate();
 
     // ================= NORMAL LOGIN =================
@@ -34,15 +34,22 @@ const Login = () => {
                 role
             );
 
+            // Login only after backend validates
+            // email, password and role
             login(data);
 
-            // Redirect based on actual user role
+            // Redirect according to actual database role
             if (data.user.role === "recruiter") {
                 navigate("/dashboard");
             } else {
                 navigate("/my-applications");
             }
         } catch (error) {
+            // IMPORTANT:
+            // Clear any previous candidate/recruiter session
+            logout();
+
+            // Show backend error
             setError(error.message);
         } finally {
             setLoading(false);
@@ -79,19 +86,26 @@ const Login = () => {
 
             if (!response.ok) {
                 throw new Error(
-                    data.message || "Google login failed"
+                    data.message ||
+                    "Google login failed"
                 );
             }
 
+            // Login only after backend validates
+            // Google account and selected role
             login(data);
 
-            // Redirect based on actual user role
+            // Redirect according to actual database role
             if (data.user.role === "recruiter") {
                 navigate("/dashboard");
             } else {
                 navigate("/my-applications");
             }
         } catch (error) {
+            // Clear any previous session
+            logout();
+
+            // Show Google/role error
             setError(error.message);
         } finally {
             setLoading(false);
@@ -101,6 +115,8 @@ const Login = () => {
     // ================= GOOGLE LOGIN ERROR =================
 
     const handleGoogleError = () => {
+        logout();
+
         setError(
             "Google login failed. Please try again."
         );
